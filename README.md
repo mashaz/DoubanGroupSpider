@@ -7,7 +7,7 @@
 - python group.py  group_name -number #指定小组名 指定帖子条目数开始爬
 
 ## 环境:
-- macOs  10.12 / CentOS 6
+- macOS  10.12 / CentOS 6
 - python 2.7.10
 
 ## 说明:
