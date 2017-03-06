@@ -9,6 +9,6 @@
 ## 环境:
 - macOs  10.12 / CentOS 6
 - python 2.7.10
-
+- 
 - 图片保存在当前目录images文件夹下
 - 下载状态保存在status.txt中
