@@ -5,7 +5,7 @@
 - python group.py #自动推荐小组开始爬or继续爬
 - python group.py group_name #指定小组名开始爬or继续爬
 - python group.py  group_name -number #指定小组名 指定帖子条目数开始爬
-
+小组名为url目录名
 ## 环境:
 - macOS  10.12 / CentOS 6
 - python 2.7.10
