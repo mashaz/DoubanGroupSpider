@@ -4,11 +4,8 @@
 __auther__ = 'xiaohuahu94@gmail.com'
 
 '''
-豆瓣小组照片  todo: 
-					默认抓取第0-100帖  需改进到命令行参数传入
-					默认害羞组  需自动推荐小组
-					加入代理池
-					多线程
+豆瓣小组图片爬虫  todo: 	加入代理池
+						多线程
 '''
 
 import requests
@@ -17,6 +14,7 @@ import urllib,urllib2
 import re
 import os
 import sys,time
+import random
 
 requests.adapters.DEFAULT_RETRIES = 5 
 
@@ -37,9 +35,9 @@ def SaveImage(addr):
   except Exception,e:
  	print 'failed : '+str(e)
 
-def GetLinkList(gname):
+def GetLinkList(gname,endnum):
 	start_item = 0    #从第start_item条开始爬
-	all_link_list = []
+	all_link_list = [gname]
 	while(1):
 	    time.sleep(2)
 	    main_page_url = 'https://www.douban.com/group/'+gname+'/discussion?start='
@@ -49,30 +47,31 @@ def GetLinkList(gname):
 	    re_title_link = re.compile(r'https://www\.douban\.com/group/topic/[0-9]{8}')
 	    link_list = re.findall(re_title_link,response_main.content)
 	    all_link_list.extend(link_list)
-	    if start_item > 100:   
+	    if start_item >= endnum:   
 	    	return all_link_list
 	    	break
-def isContinue():  
-	continue_flag = os.path.isfile('status.txt')
-	if(continue_flag):
-		print 'continue'
-		'''
-		把txt的list信息导入到新list 然后断点继续
-		'''
-		fd = open('status.txt','r')
-		list_str = fd.read()
-		re_link = re.compile(r'https://www\.douban\.com/group/topic/[0-9]{8}')
-		detail_page_list = re.findall(re_link,list_str)
-		if detail_page_list == []:
-			os.remove('status.txt')
-		else:
-			GetImages(detail_page_list)
+def statusContinue():  
+
+	'''
+	把txt的list信息导入到新list 然后断点继续
+	'''
+	fd = open('status.txt','r')
+	list_str = fd.read()
+	re_link = re.compile(r'https://www\.douban\.com/group/topic/[0-9]{8}')
+	gname_list = list_str.split(',');
+	gname = gname_list[0].strip('"').strip("[").strip("'")
+	detail_page_list = [str(gname)]
+	detail_page_list.extend(re.findall(re_link,list_str)) 
+	if detail_page_list == []:
+		print 'status.txt无信息,删除ed'
+		os.remove('status.txt')
 	else:
-		detail_page_list = GetLinkList('haixiuzu')  # todo 把gname传进来1   
-		'''
-		无status.txt，则新抓取链接
-		'''
-		GetImages(detail_page_list)
+		gname = detail_page_list[0]
+		print '继续爬取%s小组...'%(gname)
+		GetImages(detail_page_list) 
+
+#def haveGnameContinue():
+
 def GetImages(detail_page_list):
 	while(1):
 		detail_link = detail_page_list.pop()
@@ -86,39 +85,71 @@ def GetImages(detail_page_list):
 		for i in range(len(img_link_list)):
 			time.sleep(1.5)
 			SaveImage(img_link_list.pop())
-		if detail_page_list == []:
+		if len(detail_page_list) == 1: #剩gname
 			os.remove('status.txt')
 			break
 	#print link_list
 def main():
-	if  os.path.exists('status.txt'):
-		print 'continue' #todo
-	else:
- 		if len(sys.argv) == 1:
-			if not os.path.exists('images'):
-				os.mkdir('images')
-				print '同级目录下新建立images中'
-				print '...'
-				time.sleep(2)
-				print '新建成功'
-			isContinue()
+	if not os.path.exists('images'):
+			os.mkdir('images')
+			print '同级目录下新建立images中'
+			print '...'
+			time.sleep(2)
+			print '新建成功'
+
+ 	if len(sys.argv) == 1:          
+
+ 		if  os.path.exists('status.txt'):  #有status继续
+			statusContinue()
 		else:
-			if sys.argv[1].startswith('--'):     
-				option = sys.argv[1][2:]     
-				if (option == 'version'): 
-				    print 'version 0.2'    
-				elif (option == 'help'):     
-				    print '=============豆瓣小组扫图============='
-				    print 'Format :'
-				    print '1. python group.py #自动推荐小组'
-				    print 
-				    print '2. python group.py group_name #指定小组名'
-			else:
-				if len(sys.argv) == 2 :
-					gname = sys.argv[1]
-			    	all_link_list = GetLinkList(gname)
-			    	GetImages(detail_page_list) 
-	
+			gname_list = ['haixiuzu','505473','515923','tsgwk','600490','505137','503413',
+			'511274','rouniu','qfatty','368701','36093','103485','miniskirtlegs','515085']
+			gname = random.choice(gname_list)
+			print '爬取%s小组,默认爬取300条记录'%(gname)
+			all_link_list = GetLinkList(gname,'300')
+			GetImages(all_link_list) 
+	else:  
+	#长度不为1
+		if sys.argv[1].startswith('--'):     
+			option = sys.argv[1][2:]     
+			if (option == 'version'): 
+			    print 'version 0.2'    
+			elif (option == 'help'):     
+			    print '=============豆瓣小组扫图============='
+			    print 'Format :'
+			    print '1. python group.py #自动推荐小组开始爬or继续爬'
+			    print 
+			    print '2. python group.py group_name #指定小组名开始爬or继续爬'
+			    print
+			    print '3. python group.py  group_name -number #指定小组名 指定帖子条目数开始爬'
+		else:
+			if len(sys.argv) == 2 :  #指定小组，先判断status
+				gname = sys.argv[1]
+				fd = open('status.txt','r')
+				fd_str = fd.read()
+				gname_list = fd_str.split(',');
+				gname_status = gname_list[0].strip('"').strip("[").strip("'")
+				if gname == gname_status:
+					print '继续爬取%s小组'%(gname)
+					statusContinue()
+				else:
+					os.remove('status.txt')
+					print '开始爬取%s小组'%(gname)
+		    		all_link_list = GetLinkList(gname,'300')
+		    		GetImages(all_link_list) 
+			if len(sys.argv) == 3 : 
+				gname = sys.argv[1]
+				endnum = sys.argv[2]
+				if endnum[0]!='-':
+					print '无效参数!'
+				else:
+					if os.path.exists('status.txt'):
+						os.remove('status.txt')
+					endnum = endnum.lstrip('-')
+					print '爬取%s小组%s条记录'%(gname,endnum)
+					endnum=int(endnum)
+					all_link_list = GetLinkList(gname,endnum)
+		    		GetImages(all_link_list) 
 if __name__ =='__main__':
 	main()
 
