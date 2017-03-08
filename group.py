@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import urllib,urllib2
 import re
 import os
-import sys,time
+import sys,time,platform
 import random
 
 requests.adapters.DEFAULT_RETRIES = 5 
@@ -26,8 +26,9 @@ def SaveImage(addr):
  	fName = splitPath.pop()
  	now = time.strftime("%Y-%m-%d %H:%M:%S")
 	print fName,'saved',now
-	sentence = " osascript -e 'display notification \"lol\" with title \"Completed\"' "
-	os.system(sentence)
+	#macOS右上角弹窗脚本
+	#sentence = " osascript -e 'display notification \"lol\" with title \"Completed\"' "
+	#os.system(sentence)
 	fName = 'images/' + fName
 	f = open(fName,'wb')
  	f.write(data.content)
@@ -51,7 +52,6 @@ def GetLinkList(gname,endnum):
 	    	return all_link_list
 	    	break
 def statusContinue():  
-
 	'''
 	把txt的list信息导入到新list 然后断点继续
 	'''
@@ -70,8 +70,6 @@ def statusContinue():
 		print '继续爬取%s小组...'%(gname)
 		GetImages(detail_page_list) 
 
-#def haveGnameContinue():
-
 def GetImages(detail_page_list):
 	while(1):
 		detail_link = detail_page_list.pop()
@@ -88,7 +86,7 @@ def GetImages(detail_page_list):
 		if len(detail_page_list) == 1: #剩gname
 			os.remove('status.txt')
 			break
-	#print link_list
+
 def main():
 	if not os.path.exists('images'):
 			os.mkdir('images')
@@ -96,9 +94,7 @@ def main():
 			print '...'
 			time.sleep(2)
 			print '新建成功'
-
  	if len(sys.argv) == 1:          
-
  		if  os.path.exists('status.txt'):  #有status继续
 			statusContinue()
 		else:
